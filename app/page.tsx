@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { MessageSquare, CheckCircle, LayoutDashboard, Code, ArrowRight, Zap } from 'lucide-react';
+
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -15,6 +16,7 @@ export default function LandingPage() {
           </div>
         </div>
       </header>
+
       <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
         <div className="inline-flex items-center space-x-2 bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full text-xs font-semibold mb-6">
           <Zap className="h-3.5 w-3.5" />

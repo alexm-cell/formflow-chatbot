@@ -5,6 +5,7 @@ export interface Question {
   required: boolean;
   options?: string[];
 }
+
 export interface Form {
   id: string;
   title: string;
@@ -16,12 +17,14 @@ export interface Form {
   questions: Question[];
   createdAt: string;
 }
+
 export interface Submission {
   id: string;
   formId: string;
   answers: Record<string, string>;
   submittedAt: string;
 }
+
 export let forms: Form[] = [
   {
     id: 'demo-form-1',
@@ -35,9 +38,16 @@ export let forms: Form[] = [
     questions: [
       { id: 'q1', type: 'text', label: 'Quel est votre prénom ?', required: true },
       { id: 'q2', type: 'email', label: 'Quelle est votre adresse email ?', required: true },
-      { id: 'q3', type: 'multiple_choice', label: 'Comment avez-vous connu notre plateforme ?', required: true, options: ['Recherche Google', 'Réseaux sociaux', 'Bouche à oreille', 'Autre'] },
+      { 
+        id: 'q3', 
+        type: 'multiple_choice', 
+        label: 'Comment avez-vous connu notre plateforme ?', 
+        required: true,
+        options: ['Recherche Google', 'Réseaux sociaux', 'Bouche à oreille', 'Autre'] 
+      },
       { id: 'q4', type: 'yes_no', label: 'Recommanderiez-vous notre outil ?', required: true }
     ]
   }
 ];
+
 export let submissions: Submission[] = [];
