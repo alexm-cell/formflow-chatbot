@@ -1,32 +1,46 @@
 'use client';
+import { Suspense } from 'react';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Trash2, ArrowLeft, Save, Code } from 'lucide-react';
+import { Trash2, ArrowLeft, Save, Code, ArrowUp, ArrowDown, Eye } from 'lucide-react';
 import { Form, Question } from '@/lib/store';
 
 export default function FormBuilderPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center">Chargement du builder...</div>}>
+      <FormBuilderContent />
+    </Suspense>
+  );
+}
+
+function FormBuilderContent() {
   const params = useParams();
   const router = useRouter();
   const [form, setForm] = useState<Form | null>(null);
   const [activeTab, setActiveTab] = useState<'builder' | 'embed'>('builder');
+  const [error, setError] = useState('');
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     fetch(`/api/forms`)
       .then(res => res.json())
       .then((data: Form[]) => {
         const found = data.find(f => f.id === params.id);
-        if (found) setForm(found);
-      });
+        if (found) setForm(found); else setError('Formulaire introuvable.');
+      }).catch(() => setError('Impossible de charger le formulaire.'));
   }, [params.id]);
 
   const saveForm = async () => {
     if (!form) return;
-    await fetch('/api/forms', {
+    try {
+    const response = await fetch('/api/forms', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form)
     });
-    alert('Formulaire sauvegardé avec succès !');
+    if (!response.ok) throw new Error();
+    setSaved(true); setError(''); setTimeout(() => setSaved(false), 2500);
+    } catch { setError('Échec de l’enregistrement. Vérifiez les champs et réessayez.'); }
   };
 
   const addQuestion = (type: Question['type']) => {
@@ -53,14 +67,21 @@ export default function FormBuilderPage() {
     const newQs = form.questions.filter((_, i) => i !== index);
     setForm({ ...form, questions: newQs });
   };
+  const moveQuestion = (index: number, direction: number) => {
+    if (!form) return;
+    const target = index + direction;
+    if (target < 0 || target >= form.questions.length) return;
+    const questions = [...form.questions]; [questions[index], questions[target]] = [questions[target], questions[index]];
+    setForm({ ...form, questions });
+  };
 
-  if (!form) return <div className="p-8 text-center">Chargement du builder...</div>;
+  if (!form) return <div className="p-8 text-center">{error || 'Chargement du builder...'}</div>;
 
-  const embedCode = `<script src="${typeof window !== 'undefined' ? window.location.origin : ''}/embed/${form.id}.js" async></script>`;
+  const embedCode = `<iframe src="${typeof window !== 'undefined' ? window.location.origin : 'https://votre-domaine'}/forms/${form.id}" title="${form.title}" style="width:100%;max-width:640px;height:640px;border:0" loading="lazy"></iframe>`;
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="bg-white border-b px-8 py-4 flex justify-between items-center">
+      <header className="bg-white border-b px-4 sm:px-8 py-4 flex flex-wrap justify-between items-center gap-3">
         <div className="flex items-center space-x-4">
           <button onClick={() => router.push('/dashboard')} className="text-slate-600 hover:text-slate-900"><ArrowLeft className="h-5 w-5" /></button>
           <input 
@@ -71,26 +92,32 @@ export default function FormBuilderPage() {
           />
         </div>
         <div className="flex items-center space-x-3">
+          <a href={`/forms/${form.id}`} target="_blank" className="hidden items-center gap-1 text-sm text-indigo-600 sm:flex"><Eye className="h-4 w-4"/> Aperçu</a>
           <div className="flex bg-slate-100 p-1 rounded-lg text-sm">
             <button onClick={() => setActiveTab('builder')} className={`px-3 py-1 rounded-md font-medium ${activeTab === 'builder' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-600'}`}>Questions</button>
             <button onClick={() => setActiveTab('embed')} className={`px-3 py-1 rounded-md font-medium ${activeTab === 'embed' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-600'}`}>Intégration</button>
           </div>
           <button onClick={saveForm} className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center space-x-2 hover:bg-indigo-700">
             <Save className="h-4 w-4" />
-            <span>Enregistrer</span>
+            <span>{saved ? 'Enregistré' : 'Enregistrer'}</span>
           </button>
         </div>
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-8">
+        {error && <p role="alert" className="mb-4 rounded bg-red-50 p-3 text-red-700">{error}</p>}
         {activeTab === 'builder' ? (
           <div>
+            <div className="mb-5 space-y-3 rounded-xl border bg-white p-4">
+              <label className="block text-sm">Description<input value={form.description} onChange={e => setForm({...form, description:e.target.value})} className="mt-1 w-full rounded border p-2" /></label>
+              <div className="grid gap-3 sm:grid-cols-2"><label className="text-sm">Message d’accueil<input value={form.welcomeMessage} onChange={e => setForm({...form, welcomeMessage:e.target.value})} className="mt-1 w-full rounded border p-2" /></label><label className="text-sm">Message de fin<input value={form.completionMessage} onChange={e => setForm({...form, completionMessage:e.target.value})} className="mt-1 w-full rounded border p-2" /></label></div>
+            </div>
             <div className="space-y-4 mb-8">
               {form.questions.map((q, idx) => (
                 <div key={q.id} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-semibold bg-slate-100 text-slate-600 px-2 py-1 rounded">Question {idx + 1} ({q.type})</span>
-                    <button onClick={() => deleteQuestion(idx)} className="text-red-500 hover:text-red-700"><Trash2 className="h-4 w-4" /></button>
+                    <div className="flex gap-2"><button disabled={idx===0} aria-label="Monter la question" onClick={() => moveQuestion(idx,-1)} className="disabled:opacity-30"><ArrowUp className="h-4 w-4" /></button><button disabled={idx===form.questions.length-1} aria-label="Descendre la question" onClick={() => moveQuestion(idx,1)} className="disabled:opacity-30"><ArrowDown className="h-4 w-4" /></button><button onClick={() => deleteQuestion(idx)} className="text-red-500 hover:text-red-700"><Trash2 className="h-4 w-4" /></button></div>
                   </div>
                   <input 
                     type="text" 
@@ -128,9 +155,9 @@ export default function FormBuilderPage() {
           <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
             <h3 className="text-lg font-bold text-slate-900 flex items-center space-x-2">
               <Code className="h-5 w-5 text-indigo-600" />
-              <span>Script d'intégration web</span>
+              <span>Script d&apos;intégration web</span>
             </h3>
-            <p className="text-sm text-slate-600">Copiez et collez ce snippet JavaScript juste avant la balise &lt;/body&gt; de votre site web pour afficher le widget chatbot.</p>
+            <p className="text-sm text-slate-600">Copiez et collez cet iframe dans votre page web pour afficher le formulaire conversationnel.</p>
             <textarea readOnly value={embedCode} className="w-full h-24 bg-slate-100 p-3 rounded-lg text-xs font-mono text-slate-800 outline-none" />
           </div>
         )}

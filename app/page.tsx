@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { MessageSquare, CheckCircle, LayoutDashboard, Code, ArrowRight, Zap } from 'lucide-react';
+import { MessageSquare, ArrowRight, Zap } from 'lucide-react';
 
 export default function LandingPage() {
   return (

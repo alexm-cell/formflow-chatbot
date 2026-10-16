@@ -1,36 +1,29 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FormFlow
 
-## Getting Started
+Application Next.js en français pour créer et publier des formulaires conversationnels, recueillir des réponses et intégrer un formulaire dans une page externe.
 
-First, run the development server:
+## Prérequis et démarrage
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Next.js 16 requiert Node.js 20.9 ou supérieur. Installez les dépendances avec `npm ci`, copiez `.env.example` vers `.env.local`, puis lancez `npm run dev`. Les scripts disponibles sont `dev`, `build`, `start` et `lint`.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Fonctionnalités
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Tableau de bord avec formulaires, statut de publication et soumissions horodatées.
+- Création, modification, suppression et publication/dépublication de formulaires.
+- Questions texte, e-mail, choix multiple et oui/non, avec validation des champs obligatoires et réordonnancement.
+- Aperçu public et intégration par iframe. Le formulaire public est accessible à `/forms/<id>` quand il est publié.
+- API JSON sous `/api/forms` et `/api/submissions`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Stockage et configuration PostgreSQL/Supabase
 
-## Learn More
+Le stockage actuel est en mémoire dans `lib/store.ts`. Les formulaires et réponses d'exemple sont réinitialisés au redémarrage et ne sont pas partagés entre plusieurs instances. PostgreSQL/Supabase n'est pas connecté par cette version; aucune variable de connexion ne sera utilisée tant qu'un adaptateur de base de données n'aura pas été implémenté.
 
-To learn more about Next.js, take a look at the following resources:
+Pour un déploiement durable, l'adaptateur devra utiliser PostgreSQL (par exemple Supabase), créer des tables pour `forms`, `questions` et `submissions`, conserver les horodatages côté serveur, et appliquer des politiques d'accès/RLS adaptées. Dans Supabase, `DATABASE_URL` correspond à une chaîne PostgreSQL avec droits limités; les clés Supabase secrètes/service-role ne doivent jamais être exposées au navigateur. Les variables documentées dans `.env.example` sont des emplacements vides, pas une configuration active.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Publication et intégration
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Enregistrez le formulaire dans l'éditeur, puis publiez-le depuis le tableau de bord. L'URL publique est `/forms/<id>`. Le code iframe affiché par l'éditeur peut être copié dans la page hôte; remplacez son origine de démonstration par le domaine public réel de votre déploiement.
 
-## Deploy on Vercel
+## Vérifications
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Les commandes réellement exécutées et leurs résultats sont consignés dans `AUDIT_REPORT.md` et `REPAIR_REPORT.md`.
