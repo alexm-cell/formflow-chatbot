@@ -25,7 +25,7 @@ export interface Submission {
   submittedAt: string;
 }
 
-export let forms: Form[] = [
+export const forms: Form[] = [
   {
     id: 'demo-form-1',
     title: 'Feedback Produit',
@@ -50,4 +50,24 @@ export let forms: Form[] = [
   }
 ];
 
-export let submissions: Submission[] = [];
+export const submissions: Submission[] = [];
+
+export function isQuestion(value: unknown): value is Question {
+  if (!value || typeof value !== 'object') return false;
+  const q = value as Partial<Question>;
+  return typeof q.id === 'string' && q.id.length > 0 &&
+    ['text', 'email', 'multiple_choice', 'yes_no'].includes(String(q.type)) &&
+    typeof q.label === 'string' && q.label.trim().length > 0 &&
+    typeof q.required === 'boolean' &&
+    (q.type !== 'multiple_choice' || (Array.isArray(q.options) && q.options.length >= 2 && q.options.every(o => typeof o === 'string' && o.trim())));
+}
+
+export function isForm(value: unknown): value is Form {
+  if (!value || typeof value !== 'object') return false;
+  const form = value as Partial<Form>;
+  return typeof form.id === 'string' && typeof form.title === 'string' && form.title.trim().length > 0 &&
+    typeof form.description === 'string' && typeof form.published === 'boolean' &&
+    typeof form.welcomeMessage === 'string' && typeof form.completionMessage === 'string' &&
+    typeof form.primaryColor === 'string' && /^#[0-9a-f]{6}$/i.test(form.primaryColor) &&
+    Array.isArray(form.questions) && form.questions.every(isQuestion);
+}
